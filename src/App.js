@@ -92,11 +92,11 @@ function App() {
   }
   const decryptMessages = () => {
     const dms = loaded.map((m) => {
-      if(sign !== m.signiture) return m;
+      if(sign !== m.signature) return m;
       return {
         name: m.name,
         message: AES.decrypt(m.message, secret).toString(enc.Utf8),
-        signiture: m.signiture
+        signature: m.signature
       }
     });
     setMessages(dms);
@@ -106,7 +106,7 @@ function App() {
     if(!name || name.length < 1) errors.push('Name is required');
     if(!password || password.length < 1) errors.push('Password is required');
     if(!newMessage || newMessage.length < 1) errors.push('Message is required')
-    if(errors.lenght > 0){
+    if(errors.length > 0){
       alert(errors.join('\n\n'));
       return;
     }
@@ -118,7 +118,7 @@ function App() {
     const data = {
       name: name,
       message: encMessage,
-      signiture: sign
+      signature: sign
     }
     await axios.post(`${host}/api/messages`, data)
       .then((r) => {
@@ -158,7 +158,7 @@ function App() {
       <div className="container">
         <p onClick={scrollToEnd}>...</p>
         { messages.map((m) => 
-          <Bubble name={m.name} message={m.message} unlocked={(m.signiture === sign)} key={messages.indexOf(m)}/>
+          <Bubble name={m.name} message={m.message} unlocked={(m.signature === sign)} key={messages.indexOf(m)}/>
         )}
         <div id='bottom'></div>
       </div>
