@@ -1,6 +1,6 @@
 import axios from 'axios';
 import {SHA3, AES, enc} from 'crypto-js';
-import {useState, useEffect} from 'react';
+import {useState, useEffect, useReducer} from 'react';
 
 import Bubble from './bubble';
 
@@ -16,6 +16,14 @@ function App() {
   const [newMessage, setNewMessage] = useState('');
   const [secret, setSecret] = useState(null);
   const [sign, setSign] = useState(null);
+  const [updateWorker, setUDW] = useState(undefined)
+  
+  const startWorker = (last) => {
+    clearTimeout(updateWorker);
+    return setTimeout(()=>{
+      loadMessages(last,'worker')
+    }, 20000)
+  }
   
   const toggleHeader = (e) => {
     e.preventDefault();
@@ -26,7 +34,8 @@ function App() {
   }
 
   useEffect(() => {
-    loadMessages();
+    if (updateWorker) return;
+    loadMessages(undefined, 'Initial Load.');
   },[]);
   useEffect(() => {
     decryptMessages();
@@ -67,11 +76,17 @@ function App() {
   const changeMessage = (e) => {
     setNewMessage(e.target.innerText);
   }
-  const loadMessages = () => {
-    axios.get(`${host}/api/messages`)
-    .then(r => {
-      setLoaded(r.data.data)
-      // scrollToEnd();
+  const loadMessages = (last, source) => {
+    // console.log('loading...\nlast:', last, 'source:', source);
+    let url = `${host}/api/messages${last?'?l='+last:''}`;
+    axios.get(url)
+    .then((r) => {
+      if ( r.status === 200 ) {
+        const res = r.data;
+        setLoaded(res.data);
+        last = res.last;
+      }
+      setUDW(startWorker(last))
     })
     .catch( e => console.log(e));
   }
@@ -88,11 +103,6 @@ function App() {
   }
   const sendMessage = async() => {
     let errors = [];
-    console.dir({
-      name,
-      password,
-      newMessage
-    })
     if(!name || name.length < 1) errors.push('Name is required');
     if(!password || password.length < 1) errors.push('Password is required');
     if(!newMessage || newMessage.length < 1) errors.push('Message is required')
@@ -115,7 +125,7 @@ function App() {
         if(r.status === 200) {
           data['message'] = newMessage;
           setMessages([...messages, data]);
-          loadMessages();
+          loadMessages(undefined, 'after message sent');
         };
       })
       .catch((e) => console.error('Send Message:\n',e.message));
