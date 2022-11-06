@@ -1,6 +1,6 @@
 import axios from 'axios';
 import {SHA3, AES, enc} from 'crypto-js';
-import {useState, useEffect, useReducer} from 'react';
+import {useState, useEffect} from 'react';
 
 import Bubble from './bubble';
 
